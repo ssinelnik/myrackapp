@@ -1,3 +1,7 @@
+# frozen_string_literal: true
+
+# Rack application for handling time formatting requests.
+# Processes GET /time?format=... and returns formatted time values.
 class TimeApp
   def call(env)
     return path_not_found_response unless valid_path?(env)
@@ -16,7 +20,7 @@ class TimeApp
   end
 
   def path_not_found_response
-    [404, {'Content-Type' => 'text/plain'}, ['Not found']]
+    [404, { 'Content-Type' => 'text/plain' }, ['Not found']]
   end
 
   def format_provided?(env)
@@ -24,7 +28,9 @@ class TimeApp
   end
 
   def missing_format_response
-    [200, {'Content-Type' => 'text/plain'}, ['Please provide a format parameter']]
+    [200,
+     { 'Content-Type' => 'text/plain' },
+     ['Please provide a format parameter']]
   end
 
   def extract_formats(env)
@@ -41,13 +47,13 @@ class TimeApp
   end
 
   def unknown_formats(formats)
-    valid_format_list = ['year', 'month', 'day', 'hour', 'minute', 'second']
+    valid_format_list = %w[year month day hour minute second]
     formats - valid_format_list
   end
 
   def invalid_format_response(formats)
     unknown = unknown_formats(formats)
-    [400, {'Content-Type' => 'text/plain'},
+    [400, { 'Content-Type' => 'text/plain' },
      ["Unknown time format [#{unknown.join(', ')}]"]]
   end
 

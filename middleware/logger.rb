@@ -1,5 +1,8 @@
+# frozen_string_literal: true
+
 require 'logger'
 
+# Rack middleware for HTTP request logging
 class AppLogger
   def initialize(app, **options)
     @logger = Logger.new(options[:logdev] || STDOUT)
