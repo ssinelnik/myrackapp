@@ -57,3 +57,6 @@ build-iPhoneSimulator/
 
 # Ignoring the hidden mac OS file for storing metadata about a folder
 .DS_Store
+
+# Ignoring the .log file (created automatically)
+/log/app.log
