@@ -10,7 +10,9 @@ class TimeApp
 
     formatter = TimeFormatter.new(params['format'])
     status = formatter.valid? ? 200 : 400
-    body = [formatter.valid? ? formatter.formatted_time : formatter.error_message]
+    body = [
+      formatter.valid? ? formatter.formatted_time : formatter.error_message
+    ]
     [status, {}, body]
   end
 end
