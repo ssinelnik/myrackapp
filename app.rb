@@ -1,93 +1,37 @@
 # frozen_string_literal: true
 
-# Rack application for handling time formatting requests.
-# Processes GET /time?format=... and returns formatted time values.
+require_relative 'formatter'
+
+# Rack application for handling requests
 class TimeApp
   def call(env)
-    return path_not_found_response unless valid_path?(env)
-    return missing_format_response unless format_provided?(env)
+    return path_not_found_response unless env['PATH_INFO'] == '/time'
 
-    formats = extract_formats(env)
-    return invalid_format_response(formats) unless valid_formats?(formats)
+    params = Rack::Utils.parse_nested_query(env['QUERY_STRING'])
+    format_string = params['format']
 
-    process_time_request(formats)
+    return missing_format_response if format_string.nil? || format_string.empty?
+
+    process_time_request(format_string)
   end
 
   private
 
-  def valid_path?(env)
-    env['PATH_INFO'] == '/time'
+  def process_time_request(format_string)
+    formatter = TimeFormatter.new(format_string)
+
+    if formatter.valid?
+      [200, {}, [formatter.formatted_time]]
+    else
+      [400, {}, [formatter.error_message]]
+    end
   end
 
   def path_not_found_response
-    [404, { 'Content-Type' => 'text/plain' }, ['Not found']]
-  end
-
-  def format_provided?(env)
-    !extract_format_param(env).nil?
+    [404, {}, ['Not found']]
   end
 
   def missing_format_response
-    [200,
-     { 'Content-Type' => 'text/plain' },
-     ['Please provide a format parameter']]
-  end
-
-  def extract_formats(env)
-    extract_format_param(env).split(',')
-  end
-
-  def extract_format_param(env)
-    params = Rack::Utils.parse_nested_query(env['QUERY_STRING'])
-    params['format']
-  end
-
-  def valid_formats?(formats)
-    unknown_formats(formats).empty?
-  end
-
-  def unknown_formats(formats)
-    valid_format_list = %w[year month day hour minute second]
-    formats - valid_format_list
-  end
-
-  def invalid_format_response(formats)
-    unknown = unknown_formats(formats)
-    [400, { 'Content-Type' => 'text/plain' },
-     ["Unknown time format [#{unknown.join(', ')}]"]]
-  end
-
-  def process_time_request(formats)
-    setup_format_map
-    @result = format_current_time(formats)
-    [status, headers, body]
-  end
-
-  def format_current_time(formats)
-    time = Time.now
-    formats.map { |format| time.strftime(@format_map[format]) }
-  end
-
-  def setup_format_map
-    @format_map = {
-      'year' => '%Y',
-      'month' => '%m',
-      'day' => '%d',
-      'hour' => '%H',
-      'minute' => '%M',
-      'second' => '%S'
-    }
-  end
-
-  def status
-    200
-  end
-
-  def headers
-    { 'Content-Type' => 'text/plain' }
-  end
-
-  def body
-    [@result.join('-')]
+    [400, {}, ['Please provide a format parameter']]
   end
 end
